@@ -4,9 +4,9 @@ channels:
   - conda-forge
 dependencies:
   - python=3.10
-  - cudatoolkit=10.2
-  - pytorch
-  - torchaudio
+  - cudatoolkit=11.3
+  - pytorch=1.12
+#  - torchaudio
   - torchvision
   - jupyterlab
   - networkx
