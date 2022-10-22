@@ -1,0 +1,17 @@
+name: /home/alpaca/projects/Comp755-Project-GraphGeneration/conda-env
+channels:
+  - defaults
+  - conda-forge
+dependencies:
+  - python=3.10
+  - cudatoolkit=10.2
+  - pytorch
+  - torchaudio
+  - torchvision
+  - jupyterlab
+  - networkx
+  - matplotlib
+  - scikit-learn
+  - python-louvain
+  - tensorboard
+prefix: /home/alpaca/projects/Comp755-Project-GraphGeneration/conda-env
