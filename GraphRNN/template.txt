@@ -1,0 +1,7 @@
+[graph_type]
+[max_num_node]
+[max_prev_node]
+[hidden_size_rnn]
+[hidden_size_rnn_output]
+[embedding_size_rnn]
+[embedding_size_rnn_output]
