@@ -1,3 +1,0 @@
-[submodule "GraphRNN"]
-	path = GraphRNN
-	url = git@github.com:alecplotkin/GraphRNN.git
