@@ -1,13 +1,13 @@
 ### program configuration
 class Args():
     def __init__(self):
-     def read_parameters(fname):
-        #f = open(fname, 'w')
-        f = open(fname, 'r')
-        return f.readlines()
-    parameters = read_parameters('template.txt')
+        f = open('experiment_template.txt')
+        parameters = f.readlines()
+        default_parameters = ['enzymes_small', 'None', 'None', '16', '8', '32', '16', '32', '32', '1000', '4', '4', '32', '3000', '100', '100', '100', '100', '0.003', '[400, 1000]', '0.3', '2', './', 'False', '3000', 'True', 'BA', 'clustering']
 
-        
+        if (len(parameters) != 29):
+            print("ERROR: Malformed input file! Please retry!")
+
         ### if clean tensorboard
         self.clean_tensorboard = False
         ### Which CUDA GPU device is used for training - this is typically ZERO or ONE
@@ -25,8 +25,7 @@ class Args():
         # self.note = 'GraphRNN_RNN_nobfs'
 
         ### Which dataset is used to train the model
-        self.graph_type = parameters[0][1:-1] # Splice out graph_type from template document
-        print("parsed output " + self.graph_type) 
+        self.graph_type = parameters[0] if '[' not in parameters[0] else default_parameters[0]
         # self.graph_type = 'DD'
         # self.graph_type = 'caveman'
         # self.graph_type = 'caveman_small'
@@ -50,8 +49,9 @@ class Args():
         #     self.graph_type = self.graph_type+str(self.noise)
 
         # if none, then auto calculate
-        self.max_num_node = None # max number of nodes in a graph
-        self.max_prev_node = None # max previous node that looks back
+        self.max_num_node = parameters[1] if '[' not in parameters[1] else default_parameters[1]
+None # max number of nodes in a graph
+        self.max_prev_node = parameters[2] if '[' not in parameters[2] else default_parameters[2] # max previous node that looks back
 
         ### network config
         ## GraphRNN
@@ -60,27 +60,27 @@ class Args():
         else:
             self.parameter_shrink = 1
         self.hidden_size_rnn = int(128/self.parameter_shrink) # hidden size for main RNN
-        self.hidden_size_rnn_output = 16 # hidden size for output RNN
+        self.hidden_size_rnn_output = parameters[3] if '[' not in parameters[3] else default_parameters[3] # hidden size for output RNN
         self.embedding_size_rnn = int(64/self.parameter_shrink) # the size for LSTM input
-        self.embedding_size_rnn_output = 8 # the embedding size for output rnn
+        self.embedding_size_rnn_output = parameters[4] if '[' not in parameters[4] else default_parameters[4] # the embedding size for output rnn
         self.embedding_size_output = int(64/self.parameter_shrink) # the embedding size for output (VAE/MLP)
     
         # Configure LSTM arguments
-        self.embedding_size_lstm = 32 # lstm embedding size set to default value
-        self.hidden_size = 16 # Set hidden value to default for now...
+        self.embedding_size_lstm = parameters[5] if '[' not in parameters[5] else default_parameters[5] # lstm embedding size set to default value
+        self.hidden_size = parameters[6] if '[' not in parameters[6] else default_parameters[6] # Set hidden value to default for now...
         # End configuration of LSTM arguments
 
-        self.batch_size = 32  # normal: 32, and the rest should be changed accordingly
-        self.test_batch_size = 32
-        self.test_total_size = 1000
-        self.num_layers = 4
+        self.batch_size = parameters[7] if '[' not in parameters[7] else default_parameters[7]  # normal: 32, and the rest should be changed accordingly
+        self.test_batch_size = parameters[8] if '[' not in parameters[8] else default_parameters[8]
+        self.test_total_size = parameters[9] if '[' not in parameters[9] else default_parameters[9]
+        self.num_layers = parameters[10] if '[' not in parameters[10] else default_parameters[10]
 
         ### training config
-        self.num_workers = 4 # num workers to load data, default 4
-        self.batch_ratio = 32 # how many batches of samples per epoch, default 32, e.g., 1 epoch = 32 batches
-        self.epochs = 3000 # now one epoch means self.batch_ratio x batch_size
-        self.epochs_test_start = 100
-        self.epochs_test = 100
+        self.num_workers = parameters[11] if '[' not in parameters[11] else default_parameters[11] # num workers to load data, default 4
+        self.batch_ratio = parameters[12] if '[' not in parameters[12] else default_parameters[12] # how many batches of samples per epoch, default 32, e.g., 1 epoch = 32 batches
+        self.epochs = parameters[13] if '[' not in paramters[13] else default_paramters[13] # now one epoch means self.batch_ratio x batch_size
+        self.epochs_test_start = paramters[14] if '[' not in parameters[14] else default_parameters[14]
+        self.epochs_test = parameters[15] if '[' not in paramters[15] else default_parameters[15]
         self.epochs_log = 100
         self.epochs_save = 100
 
