@@ -21,7 +21,6 @@
 [lr_rate]
 [sample_time]
 [dir_input]
-[nll_save_path]
 [load]
 [load_epoch]
 [save]
