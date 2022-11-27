@@ -5,7 +5,7 @@ class Args():
         parameters = f.readlines()
         default_parameters = ['enzymes_small', 'None', 'None', '16', '8', '32', '16', '32', '32', '1000', '4', '4', '32', '3000', '100', '100', '100', '100', '0.003', '[400, 1000]', '0.3', '2', './', 'False', '3000', 'True', 'BA', 'clustering']
 
-        if (len(parameters) != 29):
+        if (len(parameters) != 28):
             print("ERROR: Malformed input file! Please retry!")
 
         ### if clean tensorboard
@@ -49,8 +49,7 @@ class Args():
         #     self.graph_type = self.graph_type+str(self.noise)
 
         # if none, then auto calculate
-        self.max_num_node = parameters[1] if '[' not in parameters[1] else default_parameters[1]
-None # max number of nodes in a graph
+        self.max_num_node = parameters[1] if '[' not in parameters[1] else default_parameters[1] # max number of nodes in a graph
         self.max_prev_node = parameters[2] if '[' not in parameters[2] else default_parameters[2] # max previous node that looks back
 
         ### network config
@@ -81,18 +80,19 @@ None # max number of nodes in a graph
         self.epochs = parameters[13] if '[' not in paramters[13] else default_paramters[13] # now one epoch means self.batch_ratio x batch_size
         self.epochs_test_start = paramters[14] if '[' not in parameters[14] else default_parameters[14]
         self.epochs_test = parameters[15] if '[' not in paramters[15] else default_parameters[15]
-        self.epochs_log = 100
-        self.epochs_save = 100
+        self.epochs_log = parameters[16] if '[' not in paramters[16] else default_parameters[16]
+        self.epochs_save = parameters[17] if '[' not in paramteres[17] else default_parameters[17]
 
-        self.lr = 0.003
-        self.milestones = [400, 1000]
-        self.lr_rate = 0.3
+        self.lr = parameters[18] if '[' not in parameters[18] else default_parameters[18]
+        self.milestones = parameters[19] if '[' not in paramters[19] else default_parameters[19]
 
-        self.sample_time = 2 # sample time in each time step, when validating
+        self.lr_rate = parameters[20] if '[' not in parameters[20] else default_parameters[20]
+
+        self.sample_time = parameters[21] if '[' not in parameters[21] else default_parameters[21] # sample time in each time step, when validating
 
         ### output config
         # self.dir_input = "/dfs/scratch0/jiaxuany0/"
-        self.dir_input = "./"
+        self.dir_input = str(parameters[22] if '[' not in parameters[22] else default_parameters[22])
         self.model_save_path = self.dir_input+'model_save/' # only for nll evaluation
         self.graph_save_path = self.dir_input+'graphs/'
         self.figure_save_path = self.dir_input+'figures/'
@@ -101,18 +101,18 @@ None # max number of nodes in a graph
         self.nll_save_path = self.dir_input+'nll/'
 
 
-        self.load = False # if load model, default lr is very low
-        self.load_epoch = 3000
-        self.save = True
+        self.load = parameters[23] if '[' not in parameters[23] else default_parameters[23] # If load model, default lr is very low
+        self.load_epoch = parameters[24] if '[' not in parameters[24] else default_parameters[24]
+        self.save = parameters[25] if '[' not in parameters[25] else default_parameters[25]
 
 
         ### baseline config
         # self.generator_baseline = 'Gnp'
-        self.generator_baseline = 'BA'
+        self.generator_baseline = parameters[26] if '[' not in parameters[27] else default_parameters[26]
 
         # self.metric_baseline = 'general'
         # self.metric_baseline = 'degree'
-        self.metric_baseline = 'clustering'
+        self.metric_baseline = parameters[27] if '[' not in parameters[27] else default_parameters[27]
 
 
         ### filenames to save intemediate and final outputs
