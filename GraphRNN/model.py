@@ -9,7 +9,7 @@ import torch
 import torch.nn as nn
 from torch.autograd import Variable
 from torch import optim
-#import torch.nn.functional as F - nn.functional.sigmoid has been replaced with torch.sigmoid
+import torch.nn.functional as F
 import torch.nn.init as init
 from torch.nn.utils.rnn import pad_packed_sequence, pack_padded_sequence
 
@@ -92,7 +92,7 @@ def gumbel_sigmoid(logits, temperature):
     noise = Variable(noise_logistic).cuda()
 
     x = (logits + noise) / temperature
-    x = torch.sigmoid(x)
+    x = F.sigmoid(x)
     return x
 
 # x = Variable(torch.randn(100)).cuda()
@@ -111,7 +111,7 @@ def sample_sigmoid(y, sample, thresh=0.5, sample_time=2):
     '''
 
     # do sigmoid first
-    y = torch.sigmoid(y)
+    y = F.sigmoid(y)
     # do sampling
     if sample:
         if sample_time>1:
@@ -148,7 +148,7 @@ def sample_sigmoid_supervised(y_pred, y, current, y_len, sample_time=2):
     '''
 
     # do sigmoid first
-    y_pred = torch.sigmoid(y_pred)
+    y_pred = F.sigmoid(y_pred)
     # do sampling
     y_result = Variable(torch.rand(y_pred.size(0), y_pred.size(1), y_pred.size(2))).cuda()
     # loop over all batches
@@ -186,7 +186,7 @@ def sample_sigmoid_supervised_simple(y_pred, y, current, y_len, sample_time=2):
     '''
 
     # do sigmoid first
-    y_pred = torch.sigmoid(y_pred)
+    y_pred = F.sigmoid(y_pred)
     # do sampling
     y_result = Variable(torch.rand(y_pred.size(0), y_pred.size(1), y_pred.size(2))).cuda()
     # loop over all batches
@@ -687,7 +687,7 @@ class Graph_RNN_structure(nn.Module):
         # 3 then update self.hidden_all list
         # i.e., model will use ground truth to update new node
         # x_pred_sample = gumbel_sigmoid(x_pred, temperature=temperature)
-        x_pred_sample = sample_tensor(torch.sigmoid(x_pred),sample=True)
+        x_pred_sample = sample_tensor(F.sigmoid(x_pred),sample=True)
         thresh = 0.5
         x_thresh = Variable(torch.ones(x_pred_sample.size(0), x_pred_sample.size(1), x_pred_sample.size(2)) * thresh).cuda()
         x_pred_sample_long = torch.gt(x_pred_sample, x_thresh).long()

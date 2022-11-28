@@ -379,8 +379,171 @@ def test_encode_decode_adj_full():
 
 
 
+    
+def encode_node_labels(node_labs, num_node_labels, vocabulary = None):
+    """Create one-hot encoding of node labels.
+    
+    Args:
+        node_labs: 1-d integer array of node labels for a single graph.
+    Returns:
+        2-d float array of one-hot encoded node labels.
+    """
+    
+    labs_tokenized = np.array([vocabulary[lab] for lab in node_labs])
+    labs_encoded = np.zeros((node_labs.shape[0], num_node_labels))
+    for i, lab in enumerate(labs_tokenized):
+        labs_encoded[i, lab] = 1.
+    return labs_encoded
 
 
+
+def decode_node_labels(node_labs_encoded):
+    return np.argmax(node_labs_encoded, axis = 1) + 1
+
+
+    
+
+########## use pytorch dataloader
+########## this version loads node labels
+class Graph_sequence_sampler_pytorch_nodelabels(torch.utils.data.Dataset):
+    
+    def __init__(self, G_list, max_num_node=None, max_prev_node=None, num_node_labels = None, min_label_freq = 0.001, iteration=20000):
+        self.adj_all = []
+        self.len_all = []
+        self.labs_all = []
+        
+        for G in G_list:
+            self.adj_all.append(np.asarray(nx.to_numpy_matrix(G)))
+            self.len_all.append(G.number_of_nodes())
+            self.labs_all.append(
+                np.array(list(nx.get_node_attributes(G, "label").values()))
+            )
+            
+        if max_num_node is None:
+            self.n = max(self.len_all)
+        else:
+            self.n = max_num_node
+            
+        if max_prev_node is None:
+            print('calculating max previous node, total iteration: {}'.format(iteration))
+            self.max_prev_node = max(self.calc_max_prev_node(iter=iteration))
+            print('max previous node: {}'.format(self.max_prev_node))
+        else:
+            self.max_prev_node = max_prev_node
+        
+        if num_node_labels is None:
+            self.num_node_labels = self.calc_num_node_labels()
+        else:
+            self.num_node_labels = num_node_labels
+        
+        self.min_label_freq = min_label_freq
+        self.node_lab_vocab = self.define_vocabulary(min_freq = self.min_label_freq)
+        if num_node_labels is None:
+            self.num_node_labels = max(self.node_lab_vocab.values()) + 1
+        else:
+            self.num_node_labels = num_node_labels
+        
+        self.labs_encoded = [encode_node_labels(labs, self.num_node_labels, vocabulary = self.node_lab_vocab) for labs in self.labs_all]
+
+        
+    def __len__(self):
+        return len(self.adj_all)
+    
+    
+    
+    def __getitem__(self, idx):
+        adj_copy = self.adj_all[idx].copy()
+        x_batch = np.zeros((self.n, self.max_prev_node))  # here zeros are padded for small graph
+        x_batch[0,:] = 1 # the first input token is all ones
+        y_batch = np.zeros((self.n, self.max_prev_node))  # here zeros are padded for small graph
+        labs = self.labs_encoded[idx]  # load node labs from graph to sample from
+        labs_batch = np.zeros((self.n, labs.shape[1]))  # here zeros are padded for small graph
+        
+        # generate input x, y pairs
+        len_batch = adj_copy.shape[0]
+        x_idx = np.random.permutation(adj_copy.shape[0])
+        # print(x_idx)
+        labs = labs[x_idx, :]
+        adj_copy = adj_copy[np.ix_(x_idx, x_idx)]
+        adj_copy_matrix = np.asmatrix(adj_copy)
+        G = nx.from_numpy_matrix(adj_copy_matrix)
+        
+        # then do bfs in the permuted G
+        start_idx = np.random.randint(adj_copy.shape[0])
+        x_idx = np.array(bfs_seq(G, start_idx))
+        adj_copy = adj_copy[np.ix_(x_idx, x_idx)]
+        adj_encoded = encode_adj(adj_copy.copy(), max_prev_node=self.max_prev_node)
+        
+        # get x and y and adj
+        # for small graph the rest are zero padded
+        y_batch[0:adj_encoded.shape[0], :] = adj_encoded
+        x_batch[1:adj_encoded.shape[0] + 1, :] = adj_encoded
+        labs_batch[0:adj_encoded.shape[0] + 1, :] = labs[x_idx, :]
+        
+        return {'x':x_batch,'y':y_batch, 'labs':labs_batch, 'len':len_batch}
+
+    
+    
+    def calc_max_prev_node(self, iter=20000,topk=10):
+        max_prev_node = []
+        for i in range(iter):
+            if i % (iter / 5) == 0:
+                print('iter {} times'.format(i))
+            adj_idx = np.random.randint(len(self.adj_all))
+            adj_copy = self.adj_all[adj_idx].copy()
+            # print('Graph size', adj_copy.shape[0])
+            x_idx = np.random.permutation(adj_copy.shape[0])
+            adj_copy = adj_copy[np.ix_(x_idx, x_idx)]
+            adj_copy_matrix = np.asmatrix(adj_copy)
+            G = nx.from_numpy_matrix(adj_copy_matrix)
+            # then do bfs in the permuted G
+            start_idx = np.random.randint(adj_copy.shape[0])
+            x_idx = np.array(bfs_seq(G, start_idx))
+            adj_copy = adj_copy[np.ix_(x_idx, x_idx)]
+            # encode adj
+            adj_encoded = encode_adj_flexible(adj_copy.copy())
+            max_encoded_len = max([len(adj_encoded[i]) for i in range(len(adj_encoded))])
+            max_prev_node.append(max_encoded_len)
+        max_prev_node = sorted(max_prev_node)[-1*topk:]
+        return max_prev_node
+    
+    
+    
+    def calc_num_node_labels(self):
+        """Calculate number of node labels are present across all graphs."""
+        
+        max_labels = []
+        for node_labs in self.labs_all:
+            max_labels.append(node_labs.max())
+        return max(max_labels) + 1
+    
+    
+    
+    def define_vocabulary(self, min_freq = 0.001):
+        label_counts = {}
+        for labs in self.labs_all:
+            for lab, count in zip(*np.unique(labs, return_counts = True)):
+                if lab not in label_counts.keys():
+                    label_counts[lab] = 0
+                label_counts[lab] += count
+
+        label_counts = dict(sorted(label_counts.items(), key=lambda item: item[1], reverse = True))
+        min_count = min_freq * sum(label_counts.values())
+        vocab = {}
+        token = 0
+        for label, count in label_counts.items():
+            vocab[label] = token
+            if count > min_count:
+                token += 1
+        
+        return vocab
+    
+    
+    
+    
+    
+# TODO: write method to convert node labels to integer values in np.arange(num_node_labels).
+# TODO: write method to convert low frequency labels into UNK token.
 
 ########## use pytorch dataloader
 class Graph_sequence_sampler_pytorch(torch.utils.data.Dataset):
@@ -427,6 +590,7 @@ class Graph_sequence_sampler_pytorch(torch.utils.data.Dataset):
         adj_encoded = encode_adj(adj_copy.copy(), max_prev_node=self.max_prev_node)
         # get x and y and adj
         # for small graph the rest are zero padded
+        # EDIT: for node labels, create label_batch and return in dict.
         y_batch[0:adj_encoded.shape[0], :] = adj_encoded
         x_batch[1:adj_encoded.shape[0] + 1, :] = adj_encoded
         return {'x':x_batch,'y':y_batch, 'len':len_batch}
