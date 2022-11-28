@@ -2,12 +2,27 @@
 class Args():
     def __init__(self):
         f = open('experiment_template.txt')
-        parameters = f.readlines()
+        params = f.readlines() 
+        parameters = []
+        for p in params:
+            p.strip('\n')
+            print(p)
+            parameters.append(p)
+        
         default_parameters = ['enzymes_small', 'None', 'None', '16', '8', '32', '16', '32', '32', '1000', '4', '4', '32', '3000', '100', '100', '100', '100', '0.003', '[400, 1000]', '0.3', '2', './', 'False', '3000', 'True', 'BA', 'clustering']
+        
+        if (len(parameters) > 28):
+            if (len(parameters.pop()) > 28):
+                parameters = parameters.pop()
+                print("ERROR: Malformed input file! Please retry!")
+            else:
+                print("Valid input file, had to strip trailing newline. Retrying...\n")
+                print("Valid input file with ", parameters)
+                print("Starting args.py...")
 
-        if (len(parameters) != 28):
-            print("ERROR: Malformed input file! Please retry!")
-
+        else:
+            print("Valid input file with ", parameters)
+            print("Starting args.py...")
         ### if clean tensorboard
         self.clean_tensorboard = False
         ### Which CUDA GPU device is used for training - this is typically ZERO or ONE
@@ -78,7 +93,11 @@ class Args():
         self.num_workers = parameters[11] if '[' not in parameters[11] else default_parameters[11] # num workers to load data, default 4
         self.batch_ratio = parameters[12] if '[' not in parameters[12] else default_parameters[12] # how many batches of samples per epoch, default 32, e.g., 1 epoch = 32 batches
         self.epochs = parameters[13] if '[' not in parameters[13] else default_parameters[13] # now one epoch means self.batch_ratio x batch_size
+<<<<<<< HEAD
+        self.epochs_test_start = parameters[14] if '[' not in parameters[14] else default_parameters[14]
+=======
         self.epochs_test_start = paramters[14] if '[' not in parameters[14] else default_parameters[14]
+>>>>>>> ccb8dae228092bd13f538a020160e94733c13f00
         self.epochs_test = parameters[15] if '[' not in parameters[15] else default_parameters[15]
         self.epochs_log = parameters[16] if '[' not in parameters[16] else default_parameters[16]
         self.epochs_save = parameters[17] if '[' not in parameters[17] else default_parameters[17]
@@ -122,3 +141,4 @@ class Args():
         self.fname_test = self.note + '_' + self.graph_type + '_' + str(self.num_layers) + '_' + str(self.hidden_size_rnn) + '_test_'
         self.fname_baseline = self.graph_save_path + self.graph_type + self.generator_baseline+'_'+self.metric_baseline
 
+#a = Args() # Uncomment to test for object initialization bugs (related to parser)
