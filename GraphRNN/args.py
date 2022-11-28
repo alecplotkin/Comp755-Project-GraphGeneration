@@ -102,7 +102,7 @@ class Args():
         self.epochs_test_start = parameters[14] if '[' not in parameters[14] else default_parameters[14]
 
         self.epochs_test = parameters[15] if '[' not in parameters[15] else default_parameters[15]
-        self.epochs_log = parameters[16] if '[' not in parameters[16] else default_parameters[16]
+        self.epochs_log = int(parameters[16]) if '[' not in parameters[16] else default_parameters[16]
         self.epochs_save = parameters[17] if '[' not in parameters[17] else default_parameters[17]
 
         self.lr = parameters[18] if '[' not in parameters[18] else default_parameters[18]

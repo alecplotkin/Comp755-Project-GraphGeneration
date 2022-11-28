@@ -14,7 +14,7 @@ DD
 [epochs]
 [epochs_test_start]
 [epochs_test]
-[epochs_log]
+5
 [epochs_save]
 [lr]
 [milestones]
