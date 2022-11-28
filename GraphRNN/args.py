@@ -5,7 +5,7 @@ class Args():
         params = f.readlines() 
         parameters = []
         for p in params:
-            p.strip('\n')
+            p = p.strip('\n')
             print(p)
             parameters.append(p)
         
@@ -33,8 +33,10 @@ class Args():
         # The simple version of Graph RNN
         # self.note = 'GraphRNN_MLP'
         # The dependent Bernoulli sequence version of GraphRNN
-        self.note = 'GraphRNN_RNN'
+        # self.note = 'GraphRNN_RNN'
 
+        # The version that incorporates node labels into the prediction task.
+        self.note = 'GraphRNN_labelRNN'
         ## for comparison, removing the BFS compoenent
         # self.note = 'GraphRNN_MLP_nobfs'
         # self.note = 'GraphRNN_RNN_nobfs'

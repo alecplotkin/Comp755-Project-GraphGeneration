@@ -235,19 +235,19 @@ if __name__ == '__main__':
             h_size = args.num_node_labels,
             embedding_size = args.node_embedding_size,
             y_size = args.node_embedding_size
-        )
+        ).cuda()
         
         # repurpose MLP_plain to predict node labels from RNN hidden state
         node_pred = MLP_plain(
-            h_size = args.hidden_size_rnn_outputh,
+            h_size = args.hidden_size_rnn_output,
             embedding_size = args.node_embedding_size,
             y_size = args.num_node_labels
-        )
+        ).cuda()
             
             
 
     ### start training
-    train(args, dataset_loader, rnn, output, node_embed, node_pred)
+    train(args, dataset_loader, rnn, output, node_pred, node_embed)
 
     ### graph completion
     # train_graph_completion(args,dataset_loader,rnn,output)

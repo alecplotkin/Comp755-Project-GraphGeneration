@@ -394,7 +394,7 @@ def train_mlp_forward_epoch(epoch, args, rnn, output, data_loader):
 # train model with node labels.
 
 def train_rnn_epoch_nodelabs(
-    epoch, args, rnn, output, node_embed, node_pred, data_loader,
+    epoch, args, rnn, output, node_pred, node_embed, data_loader,
     optimizer_rnn, optimizer_output, optimizer_node_pred, optimizer_node_embed,
     scheduler_rnn, scheduler_output, scheduler_node_pred, scheduler_node_embed
     ):
@@ -408,6 +408,7 @@ def train_rnn_epoch_nodelabs(
     loss_sum = 0
     
     for batch_idx, data in enumerate(data_loader):
+        print(batch_idx)
         rnn.zero_grad()
         output.zero_grad()
         node_embed.zero_grad()
@@ -476,7 +477,7 @@ def train_rnn_epoch_nodelabs(
         # Reverse h to match output_y, output_labs.
         idx = [i for i in range(h.size(0) - 1, -1, -1)]
         idx = Variable(torch.LongTensor(idx)).cuda()
-        h = h.index_select(0, idx)
+        h = h.index_select(0, idx)        
         
         # Predict node labels from hidden state.
         labs_pred = node_pred(h)
@@ -508,7 +509,7 @@ def train_rnn_epoch_nodelabs(
         # Binary cross entropy loss for edge predictions.
         loss_y = binary_cross_entropy_weight(y_pred, output_y)
         # Multiclass cross entropy loss for label predictions.
-        loss_labs = F.cros_entropy(labs_pred, output_labs)
+        loss_labs = F.cross_entropy(labs_pred, output_labs)
         # Combine both losses.
         loss = loss_y + loss_labs
         loss.backward()
@@ -843,7 +844,7 @@ def train(args, dataset_train, rnn, output, node_pred = None, node_embed = None)
     # Might try making a version with only node_pred in order to test importance of using labels for prediction.
     if (node_pred is not None) and (node_embed is not None):
         optimizer_node_pred = optim.Adam(list(node_pred.parameters()), lr = args.lr)
-        scheculer_node_pred = MultiStepLR(optimizer_node_pred, milestones=args.milestones, gamma=args.lr_rate)
+        scheduler_node_pred = MultiStepLR(optimizer_node_pred, milestones=args.milestones, gamma=args.lr_rate)
         
         optimizer_node_embed = optim.Adam(list(node_embed.parameters()), lr = args.lr)
         scheduler_node_embed = MultiStepLR(optimizer_node_embed, milestones=args.milestones, gamma=args.lr_rate)
@@ -873,7 +874,7 @@ def train(args, dataset_train, rnn, output, node_pred = None, node_embed = None)
             )
         elif 'GraphRNN_labelRNN' in args.note:
             train_rnn_epoch_nodelabs(
-                epoch, args, rnn, output, dataset_train,
+                epoch, args, rnn, output, node_pred, node_embed, dataset_train,
                 optimizer_rnn, optimizer_output, 
                 optimizer_node_pred, optimizer_node_embed,
                 scheduler_rnn, scheduler_output,
@@ -971,5 +972,5 @@ def train_nll(args, dataset_train, dataset_test, rnn, output,graph_validate_len,
                 nll_test = train_rnn_forward_epoch(epoch, args, rnn, output, dataset_test)
             print('train',nll_train,'test',nll_test)
             f.write(str(nll_train)+','+str(nll_test)+'\n')
-
-    print('NLL evaluation done')
+import networkx as nx
+import numpy as np

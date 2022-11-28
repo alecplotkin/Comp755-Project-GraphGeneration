@@ -443,7 +443,7 @@ class Graph_sequence_sampler_pytorch_nodelabels(torch.utils.data.Dataset):
             self.num_node_labels = max(self.node_lab_vocab.values()) + 1
         else:
             self.num_node_labels = num_node_labels
-        
+        print(f'num_node_labels={self.num_node_labels}')
         self.labs_encoded = [encode_node_labels(labs, self.num_node_labels, vocabulary = self.node_lab_vocab) for labs in self.labs_all]
 
         
