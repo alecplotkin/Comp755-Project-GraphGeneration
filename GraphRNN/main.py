@@ -104,12 +104,18 @@ if __name__ == '__main__':
             graphs_train, max_prev_node = args.max_prev_node
         )
         args.max_prev_node = args.max_num_node - 1
-    else:
-        # dataset = Graph_sequence_sampler_pytorch(graphs_train,max_prev_node=args.max_prev_node,max_num_node=args.max_num_node)
+    elif 'label' in args.note:
         dataset = Graph_sequence_sampler_pytorch_nodelabels(
             graphs_train, max_prev_node = args.max_prev_node,
             max_num_node = args.max_num_node
         )
+        args.max_prev_node = dataset.max_prev_node
+    else:
+        dataset = Graph_sequence_sampler_pytorch(
+            graphs_train, max_prev_node = args.max_prev_node,
+            max_num_node = args.max_num_node
+        )
+        args.max_prev_node = dataset.max_prev_node
     
     sample_strategy = torch.utils.data.sampler.WeightedRandomSampler(
         [1.0 / len(dataset) for i in range(len(dataset))],
@@ -169,7 +175,6 @@ if __name__ == '__main__':
         
         
     elif 'GraphRNN_RNN' in args.note:
-        
         rnn = GRU_plain(
             input_size = args.max_prev_node,
             embedding_size = args.embedding_size_rnn,

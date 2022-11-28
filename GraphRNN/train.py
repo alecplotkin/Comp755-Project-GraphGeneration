@@ -476,7 +476,7 @@ def train_rnn_epoch_nodelabs(
         # Reverse h to match output_y, output_labs.
         idx = [i for i in range(h.size(0) - 1, -1, -1)]
         idx = Variable(torch.LongTensor(idx)).cuda()
-        h = h.index_select(0, idx)        
+        h = h.index_select(0, idx).cuda()
         
         # Predict node labels from hidden state.
         labs_pred = node_pred(h)
@@ -553,6 +553,7 @@ def test_rnn_epoch_nodelabs(epoch, args, rnn, output, node_pred, node_embed, tes
     labs_pred_long = Variable(
         torch.zeros(test_batch_size, max_num_node, args.num_node_labels)
     ).cuda()
+    x_step = Variable(torch.ones(test_batch_size,1,args.max_prev_node)).cuda()
     
     for i in range(max_num_node):
         h = rnn(x_step)
@@ -614,7 +615,6 @@ def train_rnn_epoch(epoch, args, rnn, output, data_loader,
         output.zero_grad()
         x_unsorted = data['x'].float()
         y_unsorted = data['y'].float()
-        labs_unsorted = data['labs'].int()
         y_len_unsorted = data['len']
         
         y_len_max = max(y_len_unsorted)
@@ -971,4 +971,5 @@ def train_nll(args, dataset_train, dataset_test, rnn, output,graph_validate_len,
                 nll_test = train_rnn_forward_epoch(epoch, args, rnn, output, dataset_test)
             print('train',nll_train,'test',nll_test)
             f.write(str(nll_train)+','+str(nll_test)+'\n')
+import networkx as nx
 import networkx as nx

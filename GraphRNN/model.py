@@ -106,7 +106,7 @@ def sample_softmax(y):
     """Select a single class sample from an array of logits."""
     
     y = F.softmax(y, dim = -1)  # softmax on logits for each batch, in last dim
-    y_numpy = y.detach().numpy().squeeze()
+    y_numpy = y.cpu().detach().numpy().squeeze()
     # print(y_numpy)
     y_result = Variable(torch.zeros(*y.shape)).cuda()
     
