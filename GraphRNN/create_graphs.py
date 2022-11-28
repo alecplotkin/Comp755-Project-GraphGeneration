@@ -149,6 +149,9 @@ def create(args):
         shuffle(graphs)
         graphs = graphs[0:200]
         args.max_prev_node = 15
+    elif args.graph_type == 'zinc':
+        ZINC = torch_geometric.datasets.ZINC(root="dataset/ZINC")
+        graphs = [zincDataToNetworkX(ZINC[i]) for i in range(10000)]
 
     return graphs
 

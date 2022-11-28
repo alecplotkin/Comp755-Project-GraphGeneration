@@ -3,6 +3,8 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.init as init
+import torch_geometric
+#import rdkit, rdkit.Chem
 from torch.autograd import Variable
 import matplotlib.pyplot as plt
 import torch.nn.functional as F
@@ -516,4 +518,68 @@ if __name__ == '__main__':
     
     for i in range(0, 160, 16):
         draw_graph_list(graphs[i:i+16], 4, 4, fname='figures/community4_' + str(i))
+
+def torchDataToMol(data):
+    atom_dict = {0: 'C', 1: 'O', 2: 'N', 3: 'F', 4: 'C', 5: 'S', 6: 'Cl', 7: 'O', 8: 'N',
+               9: 'Br', 10: 'N', 11: 'N', 12: 'N', 13: 'N', 14: 'S', 15: 'I', 16: 'P',
+               17: 'O', 18: 'N', 19: 'O', 20: 'S', 21: 'P', 22: 'P', 23: 'C',
+               24: 'P', 25: 'S', 26: 'C', 27: 'P'}
+
+    atoms = [atom_dict[i.item()] for i in data.x]
+    adj = torch_geometric.utils.to_dense_adj(data.edge_index, edge_attr=data.edge_attr)[0]
+
+    return MolFromGraphs(atoms, adj)
+
+def zincDataToNetworkX(data):
+    nx_gr = torch_geometric.utils.to_networkx(data, to_undirected=True)
+    atom_labels = {i: data.x[i].item() for i in range(len(data.x))}
+    bond_labels = {(tuple(data.edge_index.t()[i].numpy())): data.edge_attr[i].item() for i in range(len(data.edge_attr))}
+    nx.set_node_attributes(nx_gr, atom_labels, "atom")
+    nx.set_edge_attributes(nx_gr, bond_labels, "bond")
+    return nx_gr
+
+def networkXToMol(graph):
+
+    atom_dict = {0: 'C', 1: 'O', 2: 'N', 3: 'F', 4: 'C', 5: 'S', 6: 'Cl', 7: 'O', 8: 'N',
+               9: 'Br', 10: 'N', 11: 'N', 12: 'N', 13: 'N', 14: 'S', 15: 'I', 16: 'P',
+               17: 'O', 18: 'N', 19: 'O', 20: 'S', 21: 'P', 22: 'P', 23: 'C',
+               24: 'P', 25: 'S', 26: 'C', 27: 'P'}
+
+    atom_labels = nx.get_node_attributes(graph, "atom")
+    atoms = [atom_dict[atom_labels[i]] for i in range(len(graph.nodes))]
+    adj = nx.adjacency_matrix(graph, weight="bond").todense()
+
+    return MolFromGraphs(atoms, adj)
+
+
+def MolFromGraphs(node_list, adjacency_matrix):
+    # create empty editable mol object
+    mol = rdkit.Chem.RWMol()
+
+    # add atoms to mol and keep track of index
+    node_to_idx = {}
+    for i in range(len(node_list)):
+        a = rdkit.Chem.Atom(node_list[i])
+        molIdx = mol.AddAtom(a)
+        node_to_idx[i] = molIdx
+
+
+    # add bonds between adjacent atoms
+    for iy, ix in np.ndindex(adjacency_matrix.shape):
+        if iy <= ix:
+            continue
+
+        if adjacency_matrix[iy, ix] == 0:
+            continue
+        elif adjacency_matrix[iy, ix] == 1:
+            bond_type = rdkit.Chem.rdchem.BondType.SINGLE
+            mol.AddBond(node_to_idx[ix], node_to_idx[iy], bond_type)
+        elif adjacency_matrix[iy, ix] == 2:
+            bond_type = rdkit.Chem.rdchem.BondType.DOUBLE
+            mol.AddBond(node_to_idx[ix], node_to_idx[iy], bond_type)
+
+    # Convert RWMol to Mol object
+    mol = mol.GetMol()
+
+    return mol
 
