@@ -534,7 +534,7 @@ def zincDataToNetworkX(data):
     nx_gr = torch_geometric.utils.to_networkx(data, to_undirected=True)
     atom_labels = {i: data.x[i].item() for i in range(len(data.x))}
     bond_labels = {(tuple(data.edge_index.t()[i].numpy())): data.edge_attr[i].item() for i in range(len(data.edge_attr))}
-    nx.set_node_attributes(nx_gr, atom_labels, "atom")
+    nx.set_node_attributes(nx_gr, atom_labels, "label")
     nx.set_edge_attributes(nx_gr, bond_labels, "bond")
     return nx_gr
 
@@ -545,7 +545,7 @@ def networkXToMol(graph):
                17: 'O', 18: 'N', 19: 'O', 20: 'S', 21: 'P', 22: 'P', 23: 'C',
                24: 'P', 25: 'S', 26: 'C', 27: 'P'}
 
-    atom_labels = nx.get_node_attributes(graph, "atom")
+    atom_labels = nx.get_node_attributes(graph, "label")
     atoms = [atom_dict[atom_labels[i]] for i in range(len(graph.nodes))]
     adj = nx.adjacency_matrix(graph, weight="bond").todense()
 

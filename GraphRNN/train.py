@@ -408,7 +408,6 @@ def train_rnn_epoch_nodelabs(
     loss_sum = 0
     
     for batch_idx, data in enumerate(data_loader):
-        print(batch_idx)
         rnn.zero_grad()
         output.zero_grad()
         node_embed.zero_grad()
@@ -973,4 +972,3 @@ def train_nll(args, dataset_train, dataset_test, rnn, output,graph_validate_len,
             print('train',nll_train,'test',nll_test)
             f.write(str(nll_train)+','+str(nll_test)+'\n')
 import networkx as nx
-import numpy as np
