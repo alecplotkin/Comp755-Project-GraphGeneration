@@ -1,4 +1,4 @@
-[graph_type]
+"DD"
 [max_num_node]
 [max_prev_node]
 [hidden_size_rnn_output]

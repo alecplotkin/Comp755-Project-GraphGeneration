@@ -9,7 +9,7 @@ class Args():
             print(p)
             parameters.append(p)
         
-        default_parameters = ['enzymes_small', 'None', 'None', '16', '8', '32', '16', '32', '32', '1000', '4', '4', '32', '3000', '100', '100', '100', '100', '0.003', '[400, 1000]', '0.3', '2', './', 'False', '3000', 'True', 'BA', 'clustering']
+        default_parameters = ['enzymes_small', None, None, 16, 8, 32, 16, 32, 32, 1000, 4, 4, 32, 3000, 100, 100, 100, 100, 0.003, [400, 1000], 0.3, 2, './', False, 3000, True, 'BA', 'clustering']
         
         if (len(parameters) > 28):
             if (len(parameters.pop()) > 28):
@@ -66,6 +66,8 @@ class Args():
         # if none, then auto calculate
         self.max_num_node = parameters[1] if '[' not in parameters[1] else default_parameters[1] # max number of nodes in a graph
         self.max_prev_node = parameters[2] if '[' not in parameters[2] else default_parameters[2] # max previous node that looks back
+        self.num_node_labels = None  # number of distinct node labels
+
 
         ### network config
         ## GraphRNN
@@ -81,6 +83,8 @@ class Args():
     
         # Configure LSTM arguments
         self.embedding_size_lstm = parameters[5] if '[' not in parameters[5] else default_parameters[5] # lstm embedding size set to default value
+        self.node_embedding_size = 4  # the embedding size for the training node labels
+        
         self.hidden_size = parameters[6] if '[' not in parameters[6] else default_parameters[6] # Set hidden value to default for now...
         # End configuration of LSTM arguments
 
@@ -93,11 +97,8 @@ class Args():
         self.num_workers = parameters[11] if '[' not in parameters[11] else default_parameters[11] # num workers to load data, default 4
         self.batch_ratio = parameters[12] if '[' not in parameters[12] else default_parameters[12] # how many batches of samples per epoch, default 32, e.g., 1 epoch = 32 batches
         self.epochs = parameters[13] if '[' not in parameters[13] else default_parameters[13] # now one epoch means self.batch_ratio x batch_size
-<<<<<<< HEAD
         self.epochs_test_start = parameters[14] if '[' not in parameters[14] else default_parameters[14]
-=======
-        self.epochs_test_start = paramters[14] if '[' not in parameters[14] else default_parameters[14]
->>>>>>> ccb8dae228092bd13f538a020160e94733c13f00
+
         self.epochs_test = parameters[15] if '[' not in parameters[15] else default_parameters[15]
         self.epochs_log = parameters[16] if '[' not in parameters[16] else default_parameters[16]
         self.epochs_save = parameters[17] if '[' not in parameters[17] else default_parameters[17]

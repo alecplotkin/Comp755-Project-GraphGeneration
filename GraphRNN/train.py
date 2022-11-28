@@ -550,34 +550,52 @@ def test_rnn_epoch_nodelabs(epoch, args, rnn, output, node_pred, node_embed, tes
     y_pred_long = Variable(
         torch.zeros(test_batch_size, max_num_node, args.max_prev_node)
     ).cuda() # discrete prediction
-    x_step = Variable(
-        torch.ones(test_batch_size, 1, args.max_prev_node)
+    labs_pred_long = Variable(
+        torch.zeros(test_batch_size, max_num_node, args.num_node_labels)
     ).cuda()
     
     for i in range(max_num_node):
         h = rnn(x_step)
-        
+        lab_pred = node_pred(h)
+        lab_pred = sample_softmax(lab_pred)
+        lab_embedded = node_embed(lab_pred)
+        hcat = torch.cat((h, lab_embedded), dim = -1)
         
         # output.hidden = h.permute(1,0,2)
-        hidden_null = Variable(torch.zeros(args.num_layers - 1, h.size(0), h.size(2))).cuda()
-        output.hidden = torch.cat((h.permute(1,0,2), hidden_null),
-                                  dim=0)  # num_layers, batch_size, hidden_size
+        hidden_null = Variable(
+            torch.zeros(args.num_layers - 1, hcat.size(0), hcat.size(2))
+        ).cuda()
+        output.hidden = torch.cat((hcat.permute(1,0,2), hidden_null), dim=0)  # num_layers, batch_size, hidden_size
         x_step = Variable(torch.zeros(test_batch_size,1,args.max_prev_node)).cuda()
         output_x_step = Variable(torch.ones(test_batch_size,1,1)).cuda()
+        
         for j in range(min(args.max_prev_node,i+1)):
             output_y_pred_step = output(output_x_step)
-            output_x_step = sample_sigmoid(output_y_pred_step, sample=True, sample_time=1)
+            output_x_step = sample_sigmoid(
+                output_y_pred_step, sample=True, sample_time=1
+            )
             x_step[:,:,j:j+1] = output_x_step
             output.hidden = Variable(output.hidden.data).cuda()
-        y_pred_long[:, i:i + 1, :] = x_step
+            
+        y_pred_long[:, i:i+1, :] = x_step
+        labs_pred_long[:, i:i+1, :] = lab_pred
         rnn.hidden = Variable(rnn.hidden.data).cuda()
+        
     y_pred_long_data = y_pred_long.data.long()
+    labs_pred_long_data = labs_pred_long.data.long()
 
     # save graphs as pickle
     G_pred_list = []
     for i in range(test_batch_size):
         adj_pred = decode_adj(y_pred_long_data[i].cpu().numpy())
+        labs_decoded = decode_node_labels(
+            labs_pred_long_data[i].cpu().numpy(), args.decode_lab_vocab
+        )
         G_pred = get_graph(adj_pred) # get a graph from zero-padded adj
+        G_pred.remove_node(0)  # remove first node since we don't have a label prediction.
+        for node in G_pred.nodes:
+            G_pred.nodes[node]['label'] = labs_decoded[node - 1]
+        
         G_pred_list.append(G_pred)
 
     return G_pred_list
@@ -853,7 +871,7 @@ def train(args, dataset_train, rnn, output, node_pred = None, node_embed = None)
                 optimizer_rnn, optimizer_output,
                 scheduler_rnn, scheduler_output
             )
-        elif 'nodeGraphRNN_RNN' in args.note:
+        elif 'GraphRNN_labelRNN' in args.note:
             train_rnn_epoch_nodelabs(
                 epoch, args, rnn, output, dataset_train,
                 optimizer_rnn, optimizer_output, 
@@ -869,13 +887,27 @@ def train(args, dataset_train, rnn, output, node_pred = None, node_embed = None)
                 G_pred = []
                 while len(G_pred)<args.test_total_size:
                     if 'GraphRNN_VAE' in args.note:
-                        G_pred_step = test_vae_epoch(epoch, args, rnn, output, test_batch_size=args.test_batch_size,sample_time=sample_time)
+                        G_pred_step = test_vae_epoch(
+                            epoch, args, rnn, output, 
+                            test_batch_size = args.test_batch_size,
+                            sample_time = sample_time
+                        )
                     elif 'GraphRNN_MLP' in args.note:
-                        G_pred_step = test_mlp_epoch(epoch, args, rnn, output, test_batch_size=args.test_batch_size,sample_time=sample_time)
+                        G_pred_step = test_mlp_epoch(
+                            epoch, args, rnn, output, 
+                            test_batch_size = args.test_batch_size,
+                            sample_time = sample_time
+                        )
                     elif 'GraphRNN_RNN' in args.note:
-                        G_pred_step = test_rnn_epoch(epoch, args, rnn, output, test_batch_size=args.test_batch_size)
-                    # TODO: write test_rnn_epoch_nodelabs function.
-                    # TODO: change name of 'nodeGraphRNN_RNN' to something that doesn't conflict with 'GraphRNN_RNN'.
+                        G_pred_step = test_rnn_epoch(
+                            epoch, args, rnn, output,
+                            test_batch_size = args.test_batch_size
+                        )
+                    elif 'GraphRNN_labelRNN' in args.note:
+                        G_pred_step = test_rnn_epoch_nodelabs(
+                            epoch, args, rnn, output, node_pred, node_embed,
+                            test_batch_size = args.test_batch_size
+                        )
                     G_pred.extend(G_pred_step)
                 # save graphs
                 fname = args.graph_save_path + args.fname_pred + str(epoch) +'_'+str(sample_time) + '.dat'

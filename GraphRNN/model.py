@@ -100,6 +100,26 @@ def gumbel_sigmoid(logits, temperature):
 # print(x)
 # print(y)
 
+
+
+def sample_softmax(y):
+    """Select a single class sample from an array of logits."""
+    
+    y = F.softmax(y, dim = -1)  # softmax on logits for each batch, in last dim
+    y_numpy = y.detach().numpy().squeeze()
+    # print(y_numpy)
+    y_result = Variable(torch.zeros(*y.shape)).cuda()
+    
+    # loop over batches
+    for i in range(y.size(0)):
+        j = np.random.choice(np.arange(y.size(-1)), size = 1, p = y_numpy[i, :])
+        y_result[i, :, j] = 1.
+    
+    return y_result
+        
+
+
+
 def sample_sigmoid(y, sample, thresh=0.5, sample_time=2):
     '''
         do sampling over unnormalized score

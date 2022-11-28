@@ -120,8 +120,9 @@ if __name__ == '__main__':
         sampler = sample_strategy
     )
     
-    if 'nodeGraphRNN_RNN' in args.note:
+    if 'GraphRNN_labelRNN' in args.note:
         args.num_node_labels = dataset.num_node_labels
+        args.decode_lab_vocab = dataset.reverse_vocabulary()
         
 
         
@@ -155,7 +156,7 @@ if __name__ == '__main__':
         rnn = GRU_plain(
             input_size = args.max_prev_node, 
             embedding_size = args.embedding_size_rnn,
-            hidden_size = args.hidden_size_rnn, 
+            hidden_size = args.hiddnodeen_size_rnn, 
             num_layers = args.num_layers,
             has_input = True, has_output = False
         ).cuda()
@@ -209,7 +210,7 @@ if __name__ == '__main__':
         ).cuda()
         
         
-    elif 'nodeGraphRNN_RNN' in args.note:
+    elif 'GraphRNN_labelRNN' in args.note:
         
         rnn = GRU_plain(
             input_size = args.max_prev_node,

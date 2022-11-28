@@ -335,6 +335,7 @@ def encode_adj_full(adj):
 
     return adj_output,adj_len
 
+
 def decode_adj_full(adj_output):
     '''
     return an adj according to adj_output
@@ -354,6 +355,7 @@ def decode_adj_full(adj_output):
         adj[i+1,output_start:output_end] = adj_slice[::-1] # put in reverse order
     adj = adj + adj.T
     return adj
+
 
 def test_encode_decode_adj_full():
 ########### code test #############
@@ -380,7 +382,7 @@ def test_encode_decode_adj_full():
 
 
     
-def encode_node_labels(node_labs, num_node_labels, vocabulary = None):
+def encode_node_labels(node_labs, num_node_labels, vocabulary):
     """Create one-hot encoding of node labels.
     
     Args:
@@ -397,8 +399,12 @@ def encode_node_labels(node_labs, num_node_labels, vocabulary = None):
 
 
 
-def decode_node_labels(node_labs_encoded):
-    return np.argmax(node_labs_encoded, axis = 1) + 1
+def decode_node_labels(labs_encoded, reverse_vocab):
+    """Decode node labels, using reversed vocabulary from dataset."""
+    
+    labs_tokenized = labs_encoded.argmax(-1)
+    labs = [reverse_vocab[l] for l in labs_tokenized]
+    return labs
 
 
     
@@ -430,11 +436,6 @@ class Graph_sequence_sampler_pytorch_nodelabels(torch.utils.data.Dataset):
             print('max previous node: {}'.format(self.max_prev_node))
         else:
             self.max_prev_node = max_prev_node
-        
-        if num_node_labels is None:
-            self.num_node_labels = self.calc_num_node_labels()
-        else:
-            self.num_node_labels = num_node_labels
         
         self.min_label_freq = min_label_freq
         self.node_lab_vocab = self.define_vocabulary(min_freq = self.min_label_freq)
@@ -509,16 +510,6 @@ class Graph_sequence_sampler_pytorch_nodelabels(torch.utils.data.Dataset):
     
     
     
-    def calc_num_node_labels(self):
-        """Calculate number of node labels are present across all graphs."""
-        
-        max_labels = []
-        for node_labs in self.labs_all:
-            max_labels.append(node_labs.max())
-        return max(max_labels) + 1
-    
-    
-    
     def define_vocabulary(self, min_freq = 0.001):
         label_counts = {}
         for labs in self.labs_all:
@@ -537,6 +528,20 @@ class Graph_sequence_sampler_pytorch_nodelabels(torch.utils.data.Dataset):
                 token += 1
         
         return vocab
+    
+    
+    def reverse_vocabulary(self, unk_token = 'UNK'):
+        """Reverse vocabulary encodings."""
+        
+        vocab = self.node_lab_vocab
+        max_token = max(vocab.values())
+        reverse_vocab = {}
+        for i in range(max_token):
+            k, v = list(vocab.items())[i]
+            reverse_vocab[v] = k
+        reverse_vocab[max_token] = unk_token
+        
+        return reverse_vocab
     
     
     
