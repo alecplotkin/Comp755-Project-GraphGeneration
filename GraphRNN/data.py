@@ -438,12 +438,17 @@ class Graph_sequence_sampler_pytorch_nodelabels(torch.utils.data.Dataset):
             self.max_prev_node = max_prev_node
         
         self.min_label_freq = min_label_freq
-        self.node_lab_vocab = self.define_vocabulary(min_freq = self.min_label_freq)
+        print(f'tokenizing node labels, using min freq: {self.min_label_freq}')
+        vocab, unk_token = self.define_vocabulary(min_freq=self.min_label_freq)
+        self.node_lab_vocab = vocab
+        self.unk_token = unk_token
+        print(f'node labels tokenized as: {self.node_lab_vocab}')
+        print(f'reverse tokens: {self.reverse_vocabulary()}')
         if num_node_labels is None:
             self.num_node_labels = max(self.node_lab_vocab.values()) + 1
         else:
             self.num_node_labels = num_node_labels
-        print(f'num_node_labels={self.num_node_labels}')
+        print(f'num_node_labels: {self.num_node_labels}')
         self.labs_encoded = [encode_node_labels(labs, self.num_node_labels, vocabulary = self.node_lab_vocab) for labs in self.labs_all]
 
         
@@ -511,6 +516,7 @@ class Graph_sequence_sampler_pytorch_nodelabels(torch.utils.data.Dataset):
     
     
     def define_vocabulary(self, min_freq = 0.001):
+        """Define vocabulary for encoding node labels."""
         label_counts = {}
         for labs in self.labs_all:
             for lab, count in zip(*np.unique(labs, return_counts = True)):
@@ -518,30 +524,33 @@ class Graph_sequence_sampler_pytorch_nodelabels(torch.utils.data.Dataset):
                     label_counts[lab] = 0
                 label_counts[lab] += count
 
-        label_counts = dict(sorted(label_counts.items(), key=lambda item: item[1], reverse = True))
-        print(label_counts)
+        label_counts = dict(sorted(
+            label_counts.items(), key=lambda item: item[1], reverse = True
+        ))
         min_count = min_freq * sum(label_counts.values())
         vocab = {}
         token = 0
+        unk_token = None
         for label, count in label_counts.items():
             vocab[label] = token
             if count > min_count:
                 token += 1
-        print(vocab)
-        return vocab
+            else:
+                unk_token = token
+        return vocab, unk_token
     
     
-    def reverse_vocabulary(self, unk_token = 'UNK'):
+    def reverse_vocabulary(self, unk_value = 'UNK'):
         """Reverse vocabulary encodings."""
         
         vocab = self.node_lab_vocab
-        max_token = max(vocab.values())
         reverse_vocab = {}
-        for i in range(max_token):
-            k, v = list(vocab.items())[i]
-            reverse_vocab[v] = k
-        reverse_vocab[max_token] = unk_token
-        print(reverse_vocab)
+        for k, v in vocab.items():
+            if v == self.unk_token:
+                reverse_vocab[v] = unk_value
+                break
+            else:
+                reverse_vocab[v] = k
         return reverse_vocab
     
     
