@@ -7,7 +7,7 @@ __pycache__/
 conda-env/
 
 # large data files
-GraphRNN/graphs/*
+# GraphRNN/graphs/*
 GraphRNN/dataset/ZINC/*
 
 # C extensions
