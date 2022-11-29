@@ -519,6 +519,7 @@ class Graph_sequence_sampler_pytorch_nodelabels(torch.utils.data.Dataset):
                 label_counts[lab] += count
 
         label_counts = dict(sorted(label_counts.items(), key=lambda item: item[1], reverse = True))
+        print(label_counts)
         min_count = min_freq * sum(label_counts.values())
         vocab = {}
         token = 0
@@ -526,7 +527,7 @@ class Graph_sequence_sampler_pytorch_nodelabels(torch.utils.data.Dataset):
             vocab[label] = token
             if count > min_count:
                 token += 1
-        
+        print(vocab)
         return vocab
     
     
@@ -540,7 +541,7 @@ class Graph_sequence_sampler_pytorch_nodelabels(torch.utils.data.Dataset):
             k, v = list(vocab.items())[i]
             reverse_vocab[v] = k
         reverse_vocab[max_token] = unk_token
-        
+        print(reverse_vocab)
         return reverse_vocab
     
     

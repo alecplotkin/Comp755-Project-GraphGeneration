@@ -13,7 +13,7 @@ zinc
 [batch_ratio]
 [epochs]
 [epochs_test_start]
-[epochs_test]
+5
 5
 [epochs_save]
 [lr]
