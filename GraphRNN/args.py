@@ -98,14 +98,14 @@ class Args():
         ### training config
         self.num_workers = parameters[11] if '[' not in parameters[11] else default_parameters[11] # num workers to load data, default 4
         self.batch_ratio = parameters[12] if '[' not in parameters[12] else default_parameters[12] # how many batches of samples per epoch, default 32, e.g., 1 epoch = 32 batches
-        self.epochs = parameters[13] if '[' not in parameters[13] else default_parameters[13] # now one epoch means self.batch_ratio x batch_size
-        self.epochs_test_start = parameters[14] if '[' not in parameters[14] else default_parameters[14]
+        self.epochs = int(parameters[13]) if '[' not in parameters[13] else default_parameters[13] # now one epoch means self.batch_ratio x batch_size
+        self.epochs_test_start = int(parameters[14]) if '[' not in parameters[14] else default_parameters[14]
 
-        self.epochs_test = parameters[15] if '[' not in parameters[15] else default_parameters[15]
+        self.epochs_test = int(parameters[15]) if '[' not in parameters[15] else default_parameters[15]
         self.epochs_log = int(parameters[16]) if '[' not in parameters[16] else default_parameters[16]
-        self.epochs_save = parameters[17] if '[' not in parameters[17] else default_parameters[17]
+        self.epochs_save = int(parameters[17]) if '[' not in parameters[17] else default_parameters[17]
 
-        self.lr = parameters[18] if '[' not in parameters[18] else default_parameters[18]
+        self.lr = float(parameters[18]) if '[' not in parameters[18] else default_parameters[18]
         self.milestones = parameters[19] if '[' not in parameters[19] else default_parameters[19]
 
         self.lr_rate = parameters[20] if '[' not in parameters[20] else default_parameters[20]

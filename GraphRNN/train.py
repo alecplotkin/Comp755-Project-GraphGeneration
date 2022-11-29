@@ -480,7 +480,8 @@ def train_rnn_epoch_nodelabs(
         
         # Predict node labels from hidden state.
         labs_pred = node_pred(h)
-        labs_pred = F.softmax(labs_pred, dim = 1)  # this might not be necessary... possible to leave as logits.
+        # F.cross_entropy takes logits as input, don't need softmax 
+        # labs_pred = F.softmax(labs_pred, dim = 1)  
         
         # Get label embeddings and concatenate with hidden state for edge 
         # prediction.
